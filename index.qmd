@@ -1,0 +1,356 @@
+---
+title: 'Boundary Data'
+author: 
+  - name: "Andree Valle Campos"
+  - name: "Laure Vancauwenberghe"
+  - name: "Kene David Nwosu"
+date: "2024-12-17"
+format:
+  html:
+    code-fold: true
+    code-tools: true
+    number-sections: true
+    toc: true
+    css: global/style/style.css
+editor: visual
+---
+
+```{r, include = FALSE, warning = FALSE, message = FALSE}
+# Load packages 
+if(!require(pacman)) install.packages("pacman")
+pacman::p_load(tidyverse, knitr, here)
+
+# Source functions 
+source(here("global/functions/misc_functions.R"))
+
+# knitr settings
+knitr::opts_chunk$set(warning = F, message = F, class.source = "tgc-code-block", error = T)
+```
+
+```{r,echo=FALSE}
+ggplot2::theme_set(new = theme_bw())
+```
+
+------------------------------------------------------------------------
+
+# Introduction
+
+Country **borders** or **boundaries** can have several usages. For example, they can be used as background in Thematic maps or as delimiters of other Spatial data to ease the identification of spread patterns.
+
+An example of the former is shown in Figure 1, where we retrieve the intersection between two spatial objects: points within polygons.
+
+![Figure 1. The st_intersection() function creates a new geometry with the shared portion of x and y.](images/sf_intersection_01.png)
+
+However, the access to this type of data can have **different outputs**, for example, the *low* or *high* resolution of continent and country borders, or the *availability* of certain administrative levels. The choice of these outputs will depend of your needs!
+
+In this lesson we are going to learn how to access continent, country and administrative level borders using `{rnaturalearth}`, `{rgeoboundaries}`, and `{geodata}` packages.
+
+------------------------------------------------------------------------
+
+# Learning objectives
+
+1.  Access to *low* resolution continent and country borders with `{rnaturalearth}`
+
+2.  Access to *high* resolution country and administrative level borders with `{rgeoboundaries}`
+
+------------------------------------------------------------------------
+
+# Prerequisites
+
+This lesson requires the following packages:
+
+```{r,eval=TRUE,echo=TRUE,message=FALSE}
+if(!require('pacman')) install.packages('pacman')
+
+pacman::p_load(rnaturalearth,
+               malariaAtlas,
+               ggplot2,
+               cholera,
+               geodata,
+               here,
+               sf, 
+               rgeoboundaries)
+
+pacman::p_load_gh("afrimapr/afrilearndata")
+```
+
+------------------------------------------------------------------------
+
+# Mapping country borders with `{rnaturalearth}`
+
+• Let's draw a world map with country borders.
+
+• `{rnaturalearth}` can map all the countries in the world, among others.
+
+• Use `ne_countries()` with the `returnclass = "sf"` argument.
+
+```{r}
+# YOUR CODE HERE
+countries <- ne_countries(returnclass = "sf")
+
+class(countries)
+```
+
+• It returns an `sf` object with the shapes for all countries!
+
+• So, `countries` can be plotted with `geom_sf()`:
+
+```{r}
+# YOUR CODE HERE
+ggplot(data = countries) +
+  geom_sf()
+```
+
+• Wonderful!
+
+## A single continent
+
+• Let's subset the `"south america"` **continent**, using the `continent` argument of `ne_countries()`:
+
+```{r}
+# Countries in South America
+south_am <- ne_countries(returnclass = "sf",
+                         continent = "south america") # 👈👈👈👈
+
+ggplot(data = south_am) + 
+  geom_sf()
+```
+
+• `continent` can accept **multiple** continents
+
+• Let's try `"north america"` and `"south america"`:
+
+```{r}
+# Countries in north and south america
+north_south_am <- ne_countries(returnclass = "sf",
+                               continent = c("north america", "south america")) # 👈👈👈👈
+
+ggplot(data = north_south_am) +
+  geom_sf()
+```
+
+::: r-practice
+◘ Use `ne_countries()`, `ggplot()` and `geom_sf()` to plot a single map of all the countries in the Asia and Africa continent
+
+```{r eval = FALSE}
+q_asia_africa <- 
+  ne_countries(returnclass = "sf", 
+            continent = c("asia", "africa"))
+
+ggplot(data = q_asia_africa) +
+  geom_sf()
+```
+:::
+
+## Multiple countries
+
+• Subset **one** or **multiple** countries, e.g. `"nigeria"` and `"niger"`
+
+• Use the `country` argument:
+
+```{r eval = F}
+# Map of Nigeria and Niger
+nigeria_niger <- ne_countries(returnclass = "sf", country = c("nigeria", "niger"))# CONTINUE THE CODE
+
+ggplot(data = nigeria_niger) +
+  geom_sf()
+```
+
+::: r-practice
+◘ Use `ne_countries()`, `ggplot()` and `geom_sf()` to plot a single map of the national borders of China and Indonesia
+
+```{r eval=FALSE}
+china_indonesia <- 
+  ne_countries(returnclass = "sf", 
+            country = c("china", "indonesia"))
+
+ggplot(data = china_indonesia) +
+  geom_sf()
+```
+:::
+
+------------------------------------------------------------------------
+
+# Mapping country borders with `{rgeoboundaries}`
+
+• `{rnaturalearth}` access borders that *do not need too much* boundary resolution.
+
+• `{rgeoboundaries}` access to the *high* resolution country boundaries.
+
+![Figure 2. Ireland according to {rnaturalearth} and {rgeoboundaries} packages.](images/geoboundaries_01.png){width="548"}
+
+• [`{rgeoboundaries}`](https://github.com/wmgeolab/rgeoboundaries) is a client for the [geoBoundaries API](https://www.geoboundaries.org/),
+
+• It provides country political administrative boundaries.
+
+## A single country
+
+• Use `geoboundaries()` to download the administrative boundary of `"Zimbabwe"`.
+
+```{r,eval=FALSE,echo=TRUE}
+zimbabwe_boundary <- geoboundaries(country = "zimbabwe")
+```
+
+::: key-point
+• `zimbabwe_boundary` is a `"sf"` class object.
+
+```{r,eval=FALSE,echo=FALSE,message=FALSE}
+class(zimbabwe_boundary)
+```
+
+• So, `zimbabwe_boundary` can be plotted with `geom_sf()`:
+
+```{r, eval=FALSE}
+ggplot(data = zimbabwe_boundary) +
+  geom_sf()
+```
+:::
+
+::: practice
+Download the boundaries of `Sierra Leone` using the `geoboundaries()` function.
+
+```{r,eval = FALSE}
+q1 <- geoboundaries(country = "Sierra Leone")
+
+ggplot(q1) +
+  geom_sf()
+```
+:::
+
+## Different administrative levels
+
+• If available, we can also download lower levels of administrative boundaries.
+
+• Let's pass the administrative level to `geoboundaries()`.
+
+• Administrative **level 1** (`1`) is the highest level,
+
+• Administrative **level 5** (`5`) is the lowest.
+
+• Let's get the **first** (`1`) administrative level boundaries of `"Zimbabwe"`:
+
+```{r,fig.height=3}
+zimbabwe_boundaries_adm1 <- geoboundaries(country = "zimbabwe", adm_lvl = 1)
+
+ggplot(data = zimbabwe_boundaries_adm1) +
+  geom_sf()
+```
+
+• Let's get the **second** (`2`) administrative level boundaries of Zimbabwe:
+
+```{r,fig.height=3}
+zimbabwe_boundaries_adm2 <- geoboundaries(country = "zimbabwe",
+                                   adm_lvl =  2)
+
+ggplot(data = zimbabwe_boundaries_adm2) +
+  geom_sf()
+```
+
+• Countries could be further sub-divided into administrative divisions from `1` to `5`.
+
+::: practice
+Download the `third` administrative level boundaries of `Sierra Leone`, using the `geoboundaries()` function.
+
+```{r,eval = FALSE}
+SL_boundaries_adm3 <- geoboundaries(country = "Sierra Leone",
+                                   adm_lvl =  3)
+
+ggplot(data = SL_boundaries_adm3) +
+  geom_sf()
+```
+:::
+
+::: pro-tip
+• Let's download boundaries of **multiple countries** together
+
+• Include their names as a `vector`: `c("country_01","country_02")`.
+
+• `second` administrative level boundaries of adjacent countries: `Zimbabwe` and `Mozambique`
+
+```{r, eval=FALSE}
+zimbabwe_mozambique_adm2 <- 
+  geoboundaries(country = c("zimbabwe","Mozambique"),
+                adm_lvl  = 2)
+```
+
+```{r,eval=FALSE}
+ggplot(data = zimbabwe_mozambique_adm2) +
+  geom_sf()
+```
+:::
+
+-----------------------------------------------------
+
+# Wrap up
+
+• How to **access** *low* and *high* resolution continent, country and multiple administrative level borders
+
+• Using `{rnaturalearth}` and `{rgeoboundaries}`.
+
+------------------------------------------------------------------------
+
+# Contributors {.unlisted .unnumbered}
+
+The following team members contributed to this lesson:
+
+`r tgc_contributors_list(ids = c("avallecam", "lolovanco", "kendavidn"))`
+
+------------------------------------------------------------------------
+
+# References {.unlisted .unnumbered}
+
+Some material in this lesson was adapted from the following sources:
+
+-   *Seimon, Dilinie. Administrative Boundaries.* (2021). Retrieved 15 April 2022, from <https://rspatialdata.github.io/admin_boundaries.html>
+
+-   *Varsha Ujjinni Vijay Kumar. Malaria.* (2021). Retrieved 15 April 2022, from <https://rspatialdata.github.io/malaria.html>
+
+-   *Batra, Neale, et al. The Epidemiologist R Handbook. Chapter 28: GIS Basics*. (2021). Retrieved 01 April 2022, from <https://epirhandbook.com/en/gis-basics.html>
+
+-   *Lovelace, R., Nowosad, J., & Muenchow, J. Geocomputation with R. Chapter 2: Geographic data in R*. (2019). Retrieved 01 April 2022, from <https://geocompr.robinlovelace.net/spatial-class.html>
+
+-   *Moraga, Paula. Geospatial Health Data: Modeling and Visualization with R-INLA and Shiny. Chapter 2: Spatial data and R packages for mapping*. (2019). Retrieved 01 April 2022, from <https://www.paulamoraga.com/book-geospatial/sec-spatialdataandCRS.html>
+
+`r tgc_license()`
+
+------------------------------------------------------------------------
+
+## Answer Key {.unnumbered}
+
+### Practice Q {.unlisted .unnumbered}
+Use `ne_countries()`, `ggplot()` and `geom_sf()` to plot a single map of all the countries in the Asia and Africa continent
+
+```{r eval = T}
+q_asia_africa <- 
+  ne_countries(returnclass = "sf", 
+                continent = c("asia", "africa")) 
+
+ggplot(data = q_asia_africa) +
+  geom_sf()
+```
+
+### Practice Q {.unlisted .unnumbered}
+Use `ne_countries()`, `ggplot()` and `geom_sf()` to plot a single map of the national borders of China and Indonesia
+
+```{r eval=T}
+china_indonesia <- 
+  ne_countries(returnclass = "sf",
+               country = c("china", "indonesia"))
+
+ggplot(data = china_indonesia) +
+  geom_sf()
+```
+
+### Practice Q {.unlisted .unnumbered}
+Download the boundaries of `Sierra Leone` using the `geoboundaries()` function.
+```{r,eval = FALSE}
+q1 <- geoboundaries(country = "Sierra Leone")
+q1
+```
+
+### Practice Q {.unlisted .unnumbered}
+Download the `third` administrative level boundaries of `Sierra Leone`, using the `geoboundaries()` function.
+```{r,eval = FALSE}
+q2 <- geoboundaries(country = "Sierra Leone", adm_lvl = 3)
+q2
+```
